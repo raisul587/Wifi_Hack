@@ -1,7 +1,5 @@
 import subprocess
 import re
-import os
-import sys
 import time
 
 class WiFiAssistant:
@@ -61,20 +59,26 @@ class WiFiAssistant:
 if __name__ == "__main__":
     interface = input('Enter the name of the wireless interface: ')
     assistant = WiFiAssistant(interface)
-    networks = assistant.scan_networks()
-    if networks:
-        target_network = assistant.prompt_network(networks)
-        if assistant.connect_wps(target_network):
-            print('Successfully connected to the network')
-        else:
-            print('Failed to connect using WPS')
-            pin = input('Enter PIN to try (leave blank for brute force): ')
-            if pin:
-                if assistant.connect_wps(target_network, pin):
-                    print('Successfully connected to the network')
-                else:
-                    print('Failed to connect using the provided PIN')
+    while True:
+        print('Scanning for available networks...')
+        networks = assistant.scan_networks()
+        if networks:
+            target_network = assistant.prompt_network(networks)
+            if assistant.connect_wps(target_network):
+                print('Successfully connected to the network')
+                break
             else:
-                assistant.brute_force_pin(target_network)
-    else:
-        print('No networks found')
+                print('Failed to connect using WPS')
+                pin = input('Enter PIN to try (leave blank for brute force): ')
+                if pin:
+                    if assistant.connect_wps(target_network, pin):
+                        print('Successfully connected to the network')
+                        break
+                    else:
+                        print('Failed to connect using the provided PIN')
+                else:
+                    assistant.brute_force_pin(target_network)
+                    break
+        else:
+            print('No networks found. Retrying in 10 seconds...')
+            time.sleep(10)
