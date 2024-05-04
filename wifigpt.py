@@ -1,20 +1,13 @@
-import os
+import wifi
 
 def scan_wifi():
-    # Use the 'iwlist' command to scan available Wi-Fi networks
-    scan_output = os.popen("iwlist wlan0 scan | grep 'ESSID'").read()
-
-    # Parse the output to extract network names
-    networks = []
-    for line in scan_output.split('\n'):
-        if 'ESSID' in line:
-            network_name = line.split('"')[1]
-            networks.append(network_name)
+    # Scan for available Wi-Fi networks
+    networks = wifi.Cell.all('wlan0')
 
     # Print the available Wi-Fi networks
     print("Available Wi-Fi Networks:")
     for i, network in enumerate(networks, 1):
-        print(f"{i}. {network}")
+        print(f"{i}. {network.ssid}")
 
     return networks
 
